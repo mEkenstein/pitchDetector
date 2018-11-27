@@ -1,8 +1,10 @@
-#include "kiss_fftr.h"
-#define FREQ_THRESH 90000	// För att få 0 Hz när ingen ton hörs
+// Mattias Ekström 26-27 nov 2018
 
-// Extrahera frekvensinformation från index för peaken
-float freqFromInd(int f_s, int bufSize, int ind) {
+#include "kiss_fftr.h"
+#define FREQ_THRESH 7000	// Amplituden för en identifierad peak måste vara högre än detta för att skrivas ut
+
+// Konvertera index till frekvens
+float freqFromIndex(int f_s, int bufSize, int ind) {
 	return ind * f_s / bufSize;
 }
 
@@ -12,9 +14,9 @@ int findPeak(kiss_fft_cpx *fftData, int size) {
 	float maxVal = 0.0;
 	float curVal = 0.0;
 	int peakInd = 0;
-	int minInd = 10;			// Då FFTn inte har modifierats med en fönsterfunktion struntar vi i de tio lägsta och högsta frekvensbinsen.
+	int minInd = 10;			// Då resultatet från FFTn inte har modifierats med en fönsterfunktion struntar vi i de tio lägsta och högsta frekvensbinsen.
 	int maxInd = size - 10;		// Så länge vi jobbar med hyfsat periodiska signaler (tex från gitarrsträngar) så är det dock ingen fara, 
-								// då problem vid kanterna uppstår för signaler som är icke-periodiska.	
+								// då problem vid kanterna uppstår i FFTn för signaler som är icke-periodiska.	
 	for (int ind = minInd; ind < maxInd; ind++) {
 		curVal = fftData[ind].r * fftData[ind].r + fftData[ind].i * fftData[ind].i;
 		if (curVal > maxVal) {

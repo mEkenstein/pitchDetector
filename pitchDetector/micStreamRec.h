@@ -1,3 +1,5 @@
+// Mattias Ekström 26-27 nov 2018
+
 #ifndef H_MICSTREAMREC
 #define H_MICSTREAMREC
 
@@ -14,20 +16,20 @@ class micStreamRec
 public:
 	micStreamRec(int nChannels, int sampleRate, int bitDepth, int bufSize);
 	~micStreamRec();
-	int open(short int* buf);
-	int close();
-	bool startCapture();
+	void open(short int* buf);
+	void close();
+	void startCapture();
 	void stopCapture();
-	bool isDone();
+	bool bufIsFull();
 	void resetBuffer();
 
-public:
+private:
 
 	//Members som behövs för att hantera inljud
-	WAVEFORMATEX m_myFrmt;	// Struct för ljudformat
-	HWAVEIN m_myWin;		// Handle för ljudenheten
-	WAVEHDR m_myHdr;		// Header för strömningen
-	MMRESULT m_res;			// Typ som returneras vid anrop till waveIn-funktionerna
+	WAVEFORMATEX m_format;	// Struct för ljudformat
+	HWAVEIN m_handle;		// Handle för ljudenheten
+	WAVEHDR m_header;		// Header för strömningen
+	MMRESULT m_response;			// Typ som returneras vid anrop till waveIn-funktionerna
 	int m_bufSize;			// Ljudbufferns storlek
 };
 

@@ -119,13 +119,13 @@
     <ClCompile Include="kiss_fftr.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="micStreamRec.cpp" />
-    <ClCompile Include="myFFT.cpp" />
+    <ClCompile Include="spectralAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kiss_fft.h" />
     <ClInclude Include="kiss_fftr.h" />
     <ClInclude Include="micStreamRec.h" />
-    <ClInclude Include="myFFT.h" />
+    <ClInclude Include="spectralAnalysis.h" />
     <ClInclude Include="_kiss_fft_guts.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

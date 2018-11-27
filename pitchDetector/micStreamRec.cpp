@@ -1,19 +1,23 @@
+// Mattias Ekström 26-27 nov 2018
+
 #pragma comment(lib,"winmm.lib")
 #include "micStreamRec.h"
 #include <Windows.h>
+#include <iostream>
+#include <stdlib.h>
 
 //Konstruktor som tar in önskat format och sätter upp format-structen som krävs i waveIn.
 micStreamRec::micStreamRec(int nChannels, int sampleRate, int bitDepth, int bufSize) {
-	m_myFrmt.nChannels = nChannels;
-	m_myFrmt.nSamplesPerSec = sampleRate;
-	m_myFrmt.wBitsPerSample = bitDepth;
-	m_myFrmt.wFormatTag = WAVE_FORMAT_PCM;
+	m_format.nChannels = nChannels;
+	m_format.nSamplesPerSec = sampleRate;
+	m_format.wBitsPerSample = bitDepth;
+	m_format.wFormatTag = WAVE_FORMAT_PCM;
 
 	m_bufSize = bufSize;
 
-	// Beräkningar enl. dokumentationen för WAVEFORMATEX som talar om var i buffern det är tillåtet att skriva data
-	m_myFrmt.nBlockAlign = m_myFrmt.nChannels * m_myFrmt.wBitsPerSample / 8;
-	m_myFrmt.nAvgBytesPerSec = m_myFrmt.nSamplesPerSec * m_myFrmt.nBlockAlign;
+	// Beräkningar enl. dokumentationen för WAVEFORMATEX som bl a talar om var i buffern det är tillåtet att skriva data
+	m_format.nBlockAlign = m_format.nChannels * m_format.wBitsPerSample / 8;
+	m_format.nAvgBytesPerSec = m_format.nSamplesPerSec * m_format.nBlockAlign;
 }
 
 micStreamRec::~micStreamRec() {
@@ -22,47 +26,56 @@ micStreamRec::~micStreamRec() {
 // Funktion som öppnar en instans av ljudströmning från den primära ljudingången, 
 // definierar var ljudbuffern börjar och ställer in en header för buffern 
 // för att hantera flaggor osv
-int micStreamRec::open(short int* buf ) {
-	m_res = waveInOpen(&m_myWin, WAVE_MAPPER, &m_myFrmt, 0, 0, CALLBACK_NULL | WAVE_FORMAT_DIRECT | WAVE_MAPPED_DEFAULT_COMMUNICATION_DEVICE);
-	if (m_res != MMSYSERR_NOERROR)
-		return 1;
-	m_myHdr.lpData = (LPSTR)buf;
-	m_myHdr.dwBufferLength = m_bufSize * m_myFrmt.wBitsPerSample / 8;
-	m_res = waveInPrepareHeader(m_myWin, &m_myHdr, sizeof(m_myHdr));
-	if (m_res != MMSYSERR_NOERROR)
-		return 1;
-	m_res = waveInAddBuffer(m_myWin, &m_myHdr, sizeof(m_myHdr));
-	if (m_res != MMSYSERR_NOERROR)
-		return 1;
-
-	return 0;
+void micStreamRec::open(short int* buf ) {
+	m_response = waveInOpen(&m_handle, WAVE_MAPPER, &m_format, 0, 0, CALLBACK_NULL | WAVE_FORMAT_DIRECT | WAVE_MAPPED_DEFAULT_COMMUNICATION_DEVICE);
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte öppna instans för ljudström." << std::endl;
+		exit(-1);
+	}
+	m_header.lpData = (LPSTR)buf;		// Tala om var buffern börjar för att skriva data
+	m_header.dwBufferLength = m_bufSize * m_format.wBitsPerSample / 8;	
+	m_response = waveInPrepareHeader(m_handle, &m_header, sizeof(m_header));
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte förbereda headern för ljudbuffern." << std::endl;
+		exit(-1);
+	}
+	m_response = waveInAddBuffer(m_handle, &m_header, sizeof(m_header));
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte lägga till buffern för att skriva data till." << std::endl;
+		exit(-1);
+	}
 }
 
 // Funktion som börjar skriva ljud till den allokerade buffern
-bool micStreamRec::startCapture() {
-	m_res = waveInStart(m_myWin);
-	if (m_res != MMSYSERR_NOERROR)
-		return 1;
-	
-	return 0;
+void micStreamRec::startCapture() {
+	m_response = waveInStart(m_handle);
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte börja skriva data till buffern." << std::endl;
+		exit (-1);
+	}
 }
 // Avslutar skrivningen till ljudbuffern
 void micStreamRec::stopCapture() {
-	waveInStop(m_myWin);
+	m_response = waveInStop(m_handle);
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte sluta skriva data till buffern." << std::endl;
+		exit(-1);
+	}
 }
 
 // Stänger ned instansen för ljudströmning
-int micStreamRec::close() {
-	m_res = waveInClose(m_myWin);
-	if (m_res != MMSYSERR_NOERROR)
-		return 1;
-
-	return 0;
+void micStreamRec::close() {
+	m_response = waveInClose(m_handle);
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte stänga instansen för ljudströmning." << std::endl;
+		std::cin.get();
+		exit(-1);
+	}
 }
 
 // Kontrollerar om buffern har blivit fylld
-bool micStreamRec::isDone() {
-	if (m_myHdr.dwFlags & WHDR_DONE)
+bool micStreamRec::bufIsFull() {
+	if (m_header.dwFlags & WHDR_DONE)
 		return TRUE;
 	else 
 		return FALSE;
@@ -70,9 +83,9 @@ bool micStreamRec::isDone() {
 
 // Efter att buffern blivit fylld behöver den förberedas för att kunna fyllas på nytt
 void micStreamRec::resetBuffer() {
-	m_myHdr.dwBytesRecorded = 0;
-	m_myHdr.dwFlags = 0;
-	waveInPrepareHeader(m_myWin, &m_myHdr, sizeof(m_myHdr));
-	waveInAddBuffer(m_myWin, &m_myHdr, sizeof(m_myHdr));
+	m_header.dwBytesRecorded = 0;
+	m_header.dwFlags = 0;
+	waveInPrepareHeader(m_handle, &m_header, sizeof(m_header));
+	waveInAddBuffer(m_handle, &m_header, sizeof(m_header));
 }
 

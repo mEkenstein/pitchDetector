@@ -16,7 +16,7 @@
 #include <iomanip>
 #include "micStreamRec.h"
 #include "kiss_fftr.h"
-#include "myFFT.h"
+#include "spectralAnalysis.h"
 
 
 int main() {
@@ -25,69 +25,66 @@ int main() {
 	std::cout << "\nTryck ESC f\x94r att avsluta\n" << std::endl;
 
 	// Inställningar
-	const int f_s = 44100;			// Sampelfrekvens
-	const int bufSize = 4096*2;		// Bufferstorlek för FFTn
-	const int nChannels = 1;		// Antal kanaler (stöd för 1)
-	const int bitDepth = 16;		// Bitdjup 
-	const int gain = 100;			// 20 dB gain före FFT
+	const int f_s = 44100;	
+	const int bufSize = 4096*2;	
+	const int nChannels = 1;
+	const int bitDepth = 16;
 	// 
 
-	//Initiering och konfiguration för kissfft
+	// Initiering och konfiguration för kissfft, med typer som är beskrivna
+	// i dess dokumentation
 	kiss_fft_scalar fftIn[bufSize];			// Buffer för ljudsignalen
 	kiss_fft_cpx fftOut[bufSize / 2 + 1];	// Struct för resultat från FFTn, har en reell och en imaginär komponent.
-	kiss_fftr_cfg cfg;						// Konfiguration
+	kiss_fftr_cfg config;	
 
 	// Allokering för FFTn
-	if ((cfg = kiss_fftr_alloc(bufSize, 0, NULL, NULL)) == NULL) {
+	if ((config = kiss_fftr_alloc(bufSize, 0, NULL, NULL)) == NULL) {
 		std::cout << "Inte tillrackligt med minne" << std::endl;
-		return 1;
+		return -1;
 	}
 	
 	// Skapar ett objekt som hanterar ljudströmning från mikrofonen
-	micStreamRec myStream(nChannels, f_s, bitDepth, bufSize);
+	micStreamRec micStream(nChannels, f_s, bitDepth, bufSize);
 	
 	// Allokerar minne på heap för mikrofonljud
 	short int* buf = new short int[bufSize];	// 16 bit = 2 bytes per sample
 	
-	if (myStream.open(buf)) {
-		std::cout << "Kunde inte \x94ppna ljudstr\x94m" << std::endl;
-		return 0;
-	}
+	// Öppnar en instans för ljudströmning in med adressen till ljudbuffern som argument
+	micStream.open(buf);
 
 	// Indexeringsvariabler och output-frekvens
 	int ind;
 	int peakInd = 0;
 	float outFreq = 0.0;
 
-	// Börja skriva till ljudbuffern
-	if (myStream.startCapture()) {
-		std::cout << "Kunde inte b\x94rja skriva mikrofondata" << std::endl;
-		return 0;
-	};
+	micStream.startCapture();
 	
 	// Huvudloop som fyller buffern, beräknar FFT och visar den fundamentala frekvensen
 	while (GetAsyncKeyState(VK_ESCAPE) == 0) {
-		if (myStream.isDone() == TRUE) { 
+		if (micStream.bufIsFull()) {
 			
-			// Gör om buffern till float och applicera gain
+			// Konvertera buffern till float
 			for (ind = 0; ind < bufSize; ind++) {
-				fftIn[ind] = gain*buf[ind] / float(32768.0);
+				fftIn[ind] = buf[ind] / float(32768.0);
 			}
 			
 			//Utför (ensidiga) FFTn, hitta största peaken och visa tillhörande frekvens på skärmen
-			kiss_fftr(cfg, fftIn, fftOut);
+			kiss_fftr(config, fftIn, fftOut);
 			peakInd = findPeak(fftOut, bufSize/2);	
-			outFreq = freqFromInd(f_s, bufSize, peakInd);
+			outFreq = freqFromIndex(f_s, bufSize, peakInd);
 
-			std::cout << "\rN\x84rmsta frekvensen \x84r " << std::setw(10) << std::setprecision(9) << std::setfill(' ') << outFreq << " Hz";
+			std::cout << "\rAvl\x84st frekvens:" << std::setw(10) << std::setprecision(9) << std::setfill(' ') << outFreq << " Hz";
 			
 			// Förbered buffern för att fyllas på igen
-			myStream.resetBuffer();
+			micStream.resetBuffer();
 		}		
 	}
-
-	std::cout << "\nStr\x94mning avslutad, tryck enter f\x94r att avsluta." << std::endl;
-	myStream.close();
+	std::cout << "\n" << std::endl;
+	micStream.stopCapture();
+	micStream.close();
+	free(config);
+	std::cout << "Str\x94mning avslutad." << std::endl;
+	
 	std::cin.get();
 
 	return 0;

@@ -21,14 +21,14 @@
     <ClCompile Include="micStreamRec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="myFFT.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="kiss_fftr.c">
       <Filter>Resource Files</Filter>
     </ClCompile>
     <ClCompile Include="kiss_fft.c">
       <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spectralAnalysis.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -44,7 +44,7 @@
     <ClInclude Include="kiss_fft.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="myFFT.h">
+    <ClInclude Include="spectralAnalysis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
