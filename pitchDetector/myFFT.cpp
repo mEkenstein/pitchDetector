@@ -1,5 +1,5 @@
 #include "kiss_fftr.h"
-#define FREQ_THRESH 30000	// För att få 0 Hz när ingen ton hörs
+#define FREQ_THRESH 90000	// För att få 0 Hz när ingen ton hörs
 
 // Extrahera frekvensinformation från index för peaken
 float freqFromInd(int f_s, int bufSize, int ind) {

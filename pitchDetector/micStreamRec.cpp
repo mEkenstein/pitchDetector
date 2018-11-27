@@ -1,7 +1,6 @@
 #pragma comment(lib,"winmm.lib")
 #include "micStreamRec.h"
 #include <Windows.h>
-#include <mmsystem.h>
 
 //Konstruktor som tar in önskat format och sätter upp format-structen som krävs i waveIn.
 micStreamRec::micStreamRec(int nChannels, int sampleRate, int bitDepth, int bufSize) {

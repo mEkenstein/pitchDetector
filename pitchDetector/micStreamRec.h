@@ -2,9 +2,9 @@
 #define H_MICSTREAMREC
 
 #pragma once
-#pragma comment(lib,"winmm.lib")
+
 #include <Windows.h>
-#include <mmsystem.h>
+
 
 /* Wrapper-class för att hantera input från mikrofonen.
 	Funktionerna beskrivs närmare i tillhörande .cpp-fil */

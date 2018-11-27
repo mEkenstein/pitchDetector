@@ -1,21 +1,18 @@
 /* Enkel FFT-baserad pitch-detektor som läser in en ljudsignal från systemets primära
-	inspelningsenhet och visar den fundamentala frekvensen för signalen.
+	inspelningsenhet i 16bitars ints, analyserar frekvensspektrat med en FFT och visar den 
+	fundamentala frekvensen för signalen.
 	Kan användas som stämapparat eller om man vill testa sitt absoluta gehör.
 	
 	För att läsa in mikrofondata så har Windows API med waveIn-funktioner använts.
 	För att beräkna FFTn har C-biblioteket kissFFT använts. 
 	Kompilerat i Visual Studio 2017 utan optimering. 
-	Funktionstestad.
+	Funktionstestad med diverse sinusvågor, visslingar och gitarrsträngar.
 
 	Mattias Ekström 26-27 november 2018
-	*/
-
-#pragma comment(lib,"winmm.lib")
+*/
 
 #include <Windows.h>
-#include <mmsystem.h>
 #include <iostream>
-#include <cmath>
 #include <iomanip>
 #include "micStreamRec.h"
 #include "kiss_fftr.h"
@@ -32,15 +29,15 @@ int main() {
 	const int bufSize = 4096*2;		// Bufferstorlek för FFTn
 	const int nChannels = 1;		// Antal kanaler (stöd för 1)
 	const int bitDepth = 16;		// Bitdjup 
-	const int gain = 100;		// 20 dB gain before FFT
+	const int gain = 100;			// 20 dB gain före FFT
 	// 
 
 	//Initiering och konfiguration för kissfft
 	kiss_fft_scalar fftIn[bufSize];			// Buffer för ljudsignalen
-	kiss_fft_cpx fftOut[bufSize / 2 + 1];	// Struct för resultat från FFTn
+	kiss_fft_cpx fftOut[bufSize / 2 + 1];	// Struct för resultat från FFTn, har en reell och en imaginär komponent.
 	kiss_fftr_cfg cfg;						// Konfiguration
 
-	// Allokering av FFT-buffrar
+	// Allokering för FFTn
 	if ((cfg = kiss_fftr_alloc(bufSize, 0, NULL, NULL)) == NULL) {
 		std::cout << "Inte tillrackligt med minne" << std::endl;
 		return 1;
@@ -70,14 +67,14 @@ int main() {
 	
 	// Huvudloop som fyller buffern, beräknar FFT och visar den fundamentala frekvensen
 	while (GetAsyncKeyState(VK_ESCAPE) == 0) {
-		if (myStream.isDone() == TRUE) { // Om buffern är full beräknas FFTn, den fundamentala frekvensen hittas och buffern nollställs för att fyllas igen
+		if (myStream.isDone() == TRUE) { 
 			
 			// Gör om buffern till float och applicera gain
 			for (ind = 0; ind < bufSize; ind++) {
 				fftIn[ind] = gain*buf[ind] / float(32768.0);
 			}
 			
-			//Utför FFTn, hitta största peaken och visa rätt frekvens på skärmen
+			//Utför (ensidiga) FFTn, hitta största peaken och visa tillhörande frekvens på skärmen
 			kiss_fftr(cfg, fftIn, fftOut);
 			peakInd = findPeak(fftOut, bufSize/2);	
 			outFreq = freqFromInd(f_s, bufSize, peakInd);
