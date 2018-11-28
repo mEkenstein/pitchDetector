@@ -85,7 +85,16 @@ bool micStreamRec::bufIsFull() {
 void micStreamRec::resetBuffer() {
 	m_header.dwBytesRecorded = 0;
 	m_header.dwFlags = 0;
-	waveInPrepareHeader(m_handle, &m_header, sizeof(m_header));
-	waveInAddBuffer(m_handle, &m_header, sizeof(m_header));
+	m_response = waveInPrepareHeader(m_handle, &m_header, sizeof(m_header));
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte förbereda headern för ljudbuffern." << std::endl;
+		exit(-1);
+	}
+	m_response = waveInAddBuffer(m_handle, &m_header, sizeof(m_header));
+	if (m_response != MMSYSERR_NOERROR) {
+		std::cout << "Kunde inte lägga till buffern för att skriva data till." << std::endl;
+		exit(-1);
+	}
+
 }
 

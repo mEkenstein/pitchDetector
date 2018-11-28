@@ -1,12 +1,12 @@
 /* Enkel FFT-baserad pitch-detektor som läser in en ljudsignal från systemets primära
-	inspelningsenhet i 16bitars ints, analyserar frekvensspektrat med en FFT och visar den 
-	fundamentala frekvensen för signalen.
-	Kan användas som stämapparat eller om man vill testa sitt absoluta gehör.
+	inspelningsenhet i 16bitars ints, analyserar frekvensspektrumet med en FFT och skriver ut den 
+	mest framträdande frekvensen på skärmen.
+	Kan utvecklas till en stämapparat eller användas för att testa sitt absoluta gehör.
 	
 	För att läsa in mikrofondata så har Windows API med waveIn-funktioner använts.
 	För att beräkna FFTn har C-biblioteket kissFFT använts. 
 	Kompilerat i Visual Studio 2017 utan optimering. 
-	Funktionstestad med diverse sinusvågor, visslingar och gitarrsträngar.
+	Funktionstestad med diverse sinusvågor.	
 
 	Mattias Ekström 26-27 november 2018
 */
@@ -46,7 +46,7 @@ int main() {
 	// Skapar ett objekt som hanterar ljudströmning från mikrofonen
 	micStreamRec micStream(nChannels, f_s, bitDepth, bufSize);
 	
-	// Allokerar minne på heap för mikrofonljud
+	// Allokerar minne på heap för buffern dit mikrofonljud ska skrivas
 	short int* buf = new short int[bufSize];	// 16 bit = 2 bytes per sample
 	
 	// Öppnar en instans för ljudströmning in med adressen till ljudbuffern som argument
@@ -59,7 +59,7 @@ int main() {
 
 	micStream.startCapture();
 	
-	// Huvudloop som fyller buffern, beräknar FFT och visar den fundamentala frekvensen
+	// Huvudloop som fyller buffern, beräknar FFT och visar frekvensen med störst amplitud
 	while (GetAsyncKeyState(VK_ESCAPE) == 0) {
 		if (micStream.bufIsFull()) {
 			
@@ -68,7 +68,7 @@ int main() {
 				fftIn[ind] = buf[ind] / float(32768.0);
 			}
 			
-			//Utför (ensidiga) FFTn, hitta största peaken och visa tillhörande frekvens på skärmen
+			//Beräkna (ensidiga) FFTn, hitta största peaken och visa tillhörande frekvens på skärmen
 			kiss_fftr(config, fftIn, fftOut);
 			peakInd = findPeak(fftOut, bufSize/2);	
 			outFreq = freqFromIndex(f_s, bufSize, peakInd);

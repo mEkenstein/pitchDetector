@@ -4,9 +4,7 @@
 #define H_MICSTREAMREC
 
 #pragma once
-
 #include <Windows.h>
-
 
 /* Wrapper-class för att hantera input från mikrofonen.
 	Funktionerna beskrivs närmare i tillhörande .cpp-fil */
@@ -24,13 +22,12 @@ public:
 	void resetBuffer();
 
 private:
-
 	//Members som behövs för att hantera inljud
 	WAVEFORMATEX m_format;	// Struct för ljudformat
 	HWAVEIN m_handle;		// Handle för ljudenheten
 	WAVEHDR m_header;		// Header för strömningen
 	MMRESULT m_response;			// Typ som returneras vid anrop till waveIn-funktionerna
-	int m_bufSize;			// Ljudbufferns storlek
+	int m_bufSize;
 };
 
 #endif

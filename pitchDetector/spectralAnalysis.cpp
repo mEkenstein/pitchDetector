@@ -1,15 +1,15 @@
 // Mattias Ekström 26-27 nov 2018
 
 #include "kiss_fftr.h"
-#define FREQ_THRESH 7000	// Amplituden för en identifierad peak måste vara högre än detta för att skrivas ut
+#define FREQ_THRESH 50	// Amplituden för en identifierad peak måste vara högre än detta för att skrivas ut
 
 // Konvertera index till frekvens
 float freqFromIndex(int f_s, int bufSize, int ind) {
 	return ind * f_s / bufSize;
 }
 
-// Hitta den största peaken i amplitudspektrumet, som antas höra till den fundamentala frekvensen.
-// OBS att FFTn inte är normaliserad, då värdet inte är intressant, bara vilken frekvens osm har störst amplitud.
+// Hitta den största peaken i amplitudspektrumet.
+// OBS att FFTn inte är normaliserad, då värdet inte är intressant, bara vilken frekvens som har störst amplitud.
 int findPeak(kiss_fft_cpx *fftData, int size) {
 	float maxVal = 0.0;
 	float curVal = 0.0;
