@@ -26,7 +26,7 @@ int main() {
 
 	// Inställningar
 	const int f_s = 44100;	
-	const int bufSize = 4096*2;	
+	const int bufSize = 8192;
 	const int nChannels = 1;
 	const int bitDepth = 16;
 	// 
