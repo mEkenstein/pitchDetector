@@ -4,9 +4,7 @@
 	Kan utvecklas till en stämapparat eller användas för att testa sitt absoluta gehör.
 	
 	För att läsa in mikrofondata så har Windows API med waveIn-funktioner använts.
-	För att beräkna FFTn har C-biblioteket kissFFT använts. 
-	Kompilerat i Visual Studio 2017 utan optimering. 
-	Funktionstestad med diverse sinusvågor.	
+	För att beräkna FFTn har kissFFT använts. 
 
 	Mattias Ekström 26-27 november 2018
 */
@@ -33,8 +31,8 @@ int main() {
 
 	// Initiering och konfiguration för kissfft, med typer som är beskrivna
 	// i dess dokumentation
-	kiss_fft_scalar fftIn[bufSize];			// Buffer för ljudsignalen
-	kiss_fft_cpx fftOut[bufSize / 2 + 1];	// Struct för resultat från FFTn, har en reell och en imaginär komponent.
+	kiss_fft_scalar fftIn[bufSize];			// Buffer för ljudsignalen som också FFTn beräknas på. kiss_fft_scalar är en float.
+	kiss_fft_cpx fftOut[bufSize / 2 + 1];	// Struct för resultat från FFTn, har en reell och en imaginär komponent, båda av typen kiss_fft_scalar.
 	kiss_fftr_cfg config;	
 
 	// Allokering för FFTn
@@ -63,18 +61,16 @@ int main() {
 	while (GetAsyncKeyState(VK_ESCAPE) == 0) {
 		if (micStream.bufIsFull()) {
 			
-			// Konvertera buffern till float
+			// Konvertera buffern från int [-32768, 32767] till float [-1, 1] inför FFTn
 			for (ind = 0; ind < bufSize; ind++) {
 				fftIn[ind] = buf[ind] / float(32768.0);
 			}
 			
 			//Beräkna (ensidiga) FFTn, hitta största peaken och visa tillhörande frekvens på skärmen
 			kiss_fftr(config, fftIn, fftOut);
-			peakInd = findPeak(fftOut, bufSize/2);	
-			outFreq = freqFromIndex(f_s, bufSize, peakInd);
+			outFreq = freqFromIndex(f_s, bufSize, findPeak(fftOut, bufSize / 2));
+			std::cout << "\rAvl\x84st frekvens:" << std::setw(7) << std::setprecision(5) << std::setfill(' ') << outFreq << " Hz";
 
-			std::cout << "\rAvl\x84st frekvens:" << std::setw(10) << std::setprecision(9) << std::setfill(' ') << outFreq << " Hz";
-			
 			// Förbered buffern för att fyllas på igen
 			micStream.resetBuffer();
 		}		

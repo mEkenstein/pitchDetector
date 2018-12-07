@@ -46,7 +46,7 @@ void micStreamRec::open(short int* buf ) {
 	}
 }
 
-// Funktion som börjar skriva ljud till den allokerade buffern
+// Funktion som börjar skriva ljuddata till den allokerade buffern
 void micStreamRec::startCapture() {
 	m_response = waveInStart(m_handle);
 	if (m_response != MMSYSERR_NOERROR) {
@@ -73,7 +73,7 @@ void micStreamRec::close() {
 	}
 }
 
-// Kontrollerar om buffern har blivit fylld
+// Kontrollerar om buffern är full
 bool micStreamRec::bufIsFull() {
 	if (m_header.dwFlags & WHDR_DONE)
 		return TRUE;
@@ -81,7 +81,7 @@ bool micStreamRec::bufIsFull() {
 		return FALSE;
 }
 
-// Efter att buffern blivit fylld behöver den förberedas för att kunna fyllas på nytt
+// Efter att buffern blivit fylld behöver den nollställas och läggas till för att kunna fyllas på nytt
 void micStreamRec::resetBuffer() {
 	m_header.dwBytesRecorded = 0;
 	m_header.dwFlags = 0;

@@ -14,7 +14,7 @@ int findPeak(kiss_fft_cpx *fftData, int size) {
 	float maxVal = 0.0;
 	float curVal = 0.0;
 	int peakInd = 0;
-	int minInd = 10;			// Då resultatet från FFTn inte har modifierats med en fönsterfunktion struntar vi i de tio lägsta och högsta frekvensbinsen.
+	int minInd = 10;			// Då resultatet från FFTn inte har modifierats med en fönsterfunktion exkluderar vi i de tio lägsta och högsta frekvensbinsen.
 	int maxInd = size - 10;		// Så länge vi jobbar med hyfsat periodiska signaler (tex från gitarrsträngar) så är det dock ingen fara, 
 								// då problem vid kanterna uppstår i FFTn för signaler som är icke-periodiska.	
 	for (int ind = minInd; ind < maxInd; ind++) {
